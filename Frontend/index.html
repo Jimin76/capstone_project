@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Sign in</title>
+    <!-- favicon -->
+    <link rel="icon" type="image/x-icon" href="/images/material/favicon-removebg-preview1.png">
+</head>
+
+<body>
+
+    <div class="container" id="container">
+        <div class="form-container sign-up">
+            <form id="sign_up">
+                <h1>Create Account</h1>
+                <input type="text" name="fullName" id="fullName" placeholder="Name" required>
+                <div class="fullName error"></div>
+                <input type="email" name="email" id="email" placeholder="Email" required>
+                <div class="email error"></div>
+                <input type="password" name="password" id="password" placeholder="Password" required>
+                <div class="password error"></div>
+                <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm your password" required>
+                <div class="confirmPassword error"></div>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+        <div class="form-container sign-in">
+            <form id="sign_in">
+                <h1>Sign In</h1>
+                <input type="email" name="email" id="email" placeholder="Email" required>
+                <div class="email error"></div>
+                <input type="password" name="password" id="password" placeholder="Password" required>
+                <div class="password error"></div>
+                <a href="#">Forget Your Password?</a>
+                <button type="submit">Sign In</button>
+            </form>
+        </div>
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                    <h1>Welcome Back!</h1>
+                    <p>Enter your personal details to log in!</p>
+                    <button class="hidden" id="login">Sign In</button>
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Hello our dear customer!</h1>
+                    <p>Register with your personal details to use make a reservation!</p>
+                    <button class="hidden" id="register">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+
+</html>
