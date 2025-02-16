@@ -16,5 +16,8 @@
     "url": "https://github.com/Jimin76/capstone_project/issues"
   },
   "homepage": "https://github.com/Jimin76/capstone_project#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
 }
