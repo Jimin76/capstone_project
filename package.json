@@ -20,6 +20,9 @@
   "homepage": "https://github.com/Jimin76/capstone_project#readme",
   "description": "",
   "dependencies": {
-    "express": "^4.21.2"
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "mongoose": "^8.10.1"
   }
 }
