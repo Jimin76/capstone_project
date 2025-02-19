@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+<div id="main">
+    <div id="content">
+        <div id="reserve">
+            <h3>Date: {{ row['Date'] }}</h3>
+            <p>Number of customers: {{ row['CusNum'] }}</p>
+        <button>Cancel this reservation</button>
+        </div>
+    </div>
+    <div id="content">
+        {% for food in foods %}
+            <div class="image">
+                <img src="image/crab_pasta.jpg" alt="">
+            </div>
+
+            <div id="reserve">
+                <h3>{{ food['Name'] }}</h3>
+                <p>{{ food['Price'] }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% block body %}
+
+{% endblock %}
