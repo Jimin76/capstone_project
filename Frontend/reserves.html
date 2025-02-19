@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+<div id="main">
+    <div id="content">
+        {% for row in rows %}
+            <div id="reserve"><a href="/">
+                <h3>Date: {{ row['Date'] }}</h3>
+                <p>Number of customers: {{ row['CusNum'] }}</p>
+            </a>
+            <button>Cancel this reservation</button>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="/"> Make a reservation </a>
+
+</div>
+
+{% block body %}
+
+{% endblock %}
