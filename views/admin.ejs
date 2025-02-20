@@ -1,0 +1,17 @@
+
+<div id="main">
+    <div id="content">
+        <% rows.forEach(row => { %>
+            <div id="reserve"><a href="/">
+                <h3>Date: <%= row.Date %></h3>
+                <p>Number of customers: <%= row.CusNum %></p>
+            </a>
+            <button>Confirm</button>
+            <button>Decline</button>
+            </div>
+        <% }) %>
+    </div>
+
+
+</div>
+
