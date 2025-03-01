@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reservation List</title>
+    <style>
+      :root {
+        --green: #4f6f52;
+        --light-bg: #f4fbf4;
+        --text-color: #333;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: var(--light-bg);
+      }
+      h1 {
+        color: var(--green);
+        margin-bottom: 1rem;
+      }
+
+      .search-form {
+        margin-bottom: 2rem;
+      }
+      .search-form input[type="text"] {
+        width: 220px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .search-form button {
+        background-color: var(--green);
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        margin-left: 4px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .search-form button:hover {
+        opacity: 0.9;
+      }
+
+      .reservation-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .reservation-box {
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 16px;
+        width: 250px;
+        background-color: #fff;
+      }
+      .reservation-box h3 {
+        margin: 0 0 8px 0;
+        color: var(--green);
+      }
+      .reservation-box p {
+        margin: 4px 0;
+        color: var(--text-color);
+      }
+
+      .btn-group {
+        margin-top: 8px;
+      }
+      button {
+        margin-right: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: none;
+      }
+      .cancel-btn {
+        background-color: #c94e4e;
+        color: #fff;
+      }
+      .cancel-btn:hover {
+        background-color: #b44343;
+      }
+      .details-btn {
+        background-color: var(--green);
+        color: #fff;
+      }
+      .details-btn:hover {
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Reservation List</h1>
+
+    <!-- Search form -->
+    <form class="search-form" method="GET" action="/reservations">
+      <input
+        type="text"
+        name="searchTerm"
+        placeholder="Search by name, status, or date..."
+        value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>"
+      />
+      <button type="submit">Search</button>
+    </form>
+
+    <% if (!reservations || reservations.length === 0) { %>
+      <p>No reservations found.</p>
+    <% } else { %>
+      <div class="reservation-container">
+        <% reservations.forEach((res, index) => { %>
+          <div class="reservation-box">
+            <h3><%= res.customerName %></h3>
+            <p><strong>Date:</strong> <%= res.reservationDate.toDateString() %></p>
+            <p><strong>Guests:</strong> <%= res.numOfGuests %></p>
+            <p><strong>Status:</strong> <%= res.status %></p>
+
+            <div class="btn-group">
+              <button
+                type="button"
+                class="cancel-btn"
+                onclick="handleCancel('<%= res._id %>')"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="details-btn"
+                onclick="alert('Details is not implemented yet.')"
+              >
+                See Details
+              </button>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <script>
+      // Cancel button handler (calls PUT /reservations/:id/cancel)
+      async function handleCancel(reservationId) {
+        try {
+          const response = await fetch(`/reservations/${reservationId}/cancel`, {
+            method: "PUT",
+          });
+          if (!response.ok) {
+            throw new Error("Failed to cancel reservation.");
+          }
+          // After success, refresh the page to see updated status
+          window.location.reload();
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
+      }
+    </script>
+  </body>
+</html>
