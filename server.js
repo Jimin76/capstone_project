@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const detailsRoutes = require("./routes/details");
 
 const app = express();
 const PORT = 3000;
@@ -12,6 +13,12 @@ mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ Successfully connected to MongoDB!"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Use ejs template
+app.set("view engine", "ejs");
+
+// Use Routes
+app.use("/", detailsRoutes);
 
 // Set up the default route
 app.get("/", (req, res) => {
