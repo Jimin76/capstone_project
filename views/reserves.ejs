@@ -2,7 +2,7 @@
 <div id="main">
     <div id="content">
         <% rows.forEach(row => { %>
-            <div id="reserve"><a href="/">
+            <div id="reserve"><a href="/<%= row._id %>/details">>
                 <h3>Date: <%= row.Date %></h3>
                 <p>Number of customers: <%= row.CusNum %></p>
             </a>
