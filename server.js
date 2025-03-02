@@ -1,7 +1,8 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
+const path = require("path");
 const detailsRoutes = require("./routes/details");
+const reservationRoutes = require("./routes/reservationRoutes");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const passport = require("passport");
@@ -22,6 +23,7 @@ app.set("view engine", "ejs");
 
 // Use Routes
 app.use("/", detailsRoutes);
+app.use("/reservations", reservationRoutes);
 
 // Passport config
 require("./config/passport")(passport);
