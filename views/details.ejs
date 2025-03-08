@@ -2,20 +2,20 @@
 <div id="main">
     <div id="content">
         <div id="reserve">
-            <h3>Date: <%= row.Date %></h3>
-            <p>Number of customers: <%= row.CusNum %></p>
+            <h3>Date: <%= row.reservationDate %></h3>
+            <p>Number of customers: <%= row.numOfGuests %></p>
         <button>Cancel this reservation</button>
         </div>
     </div>
     <div id="content">
-        <% rows.forEach(row => { %>
+        <% foodItems.forEach(food => { %>
             <div class="image">
                 <img src="image/crab_pasta.jpg" alt="">
             </div>
 
             <div id="reserve">
-                <h3>{{ food['Name'] }}</h3>
-                <p>{{ food['Price'] }}</p>
+                <h3><%= food.Name %></h3>
+                <p><%= food.Price %></p>
             </div>
         <% }) %>
     </div>
