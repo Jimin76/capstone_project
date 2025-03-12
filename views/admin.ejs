@@ -1,18 +1,46 @@
-
-<div id="main">
-    <div id="content">
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/admin.css">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <div id="main">
         <% rows.forEach(row => { %>
-            <div id="reserve"><a href="/">
-                <h3>Date: <%= row.Date %></h3>
-                <p>Number of customers: <%= row.CusNum %></p>
-                <p>Status: <%= row.Status %></p>
-            </a>
-            <button>Confirm</button>
-            <button>Decline/Cancel</button>
+            <div class="card">
+                <h3><%= row.customerName %></h3>
+                <p>Date</p>
+                <%= row.reservationDate %>
+                <p>Number of customers</p>
+                <%= row.numOfGuests %>
+                <p>Status</p> 
+                    <span class="status 
+                        <%= row.status === 'Confirmed' ? 'status-confirmed' : 
+                            (row.status === 'Canceled' ? 'status-canceled' : 
+                            'status-pending') %>">
+                        <%= row.status %>
+                    </span>
+                <div class="button-container">
+                    <form action="/update-status" method="POST" style="margin: 0;">
+                        <input type="hidden" name="id" value="<%= row._id %>">
+                        <input type="hidden" name="status" value="Confirmed">
+                        <button type="submit" class="accept-button" 
+                            <% if (row.status === 'Confirmed') { %> disabled <% } %> >
+                            Accept Booking
+                        </button>
+                    </form>
+
+                    <form action="/update-status" method="POST" style="margin: 0;">
+                        <input type="hidden" name="id" value="<%= row._id %>">
+                        <input type="hidden" name="status" value="Canceled">
+                        <button type="submit" class="decline-button" 
+                            <% if (row.status === 'Canceled') { %> disabled <% } %> >
+                            Decline
+                        </button>
+                    </form>
+                </div>
             </div>
         <% }) %>
     </div>
-
-
-</div>
-
+</body>
+</html>
