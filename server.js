@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
 const path = require("path");
 const detailsRoutes = require("./routes/details");
 const reservationRoutes = require("./routes/reservationRoutes");
@@ -23,7 +24,7 @@ app.set("view engine", "ejs");
 
 // Use Routes
 app.use("/", detailsRoutes);
-app.use("/reservations", reservationRoutes);
+
 
 // Passport config
 require("./config/passport")(passport);
@@ -57,6 +58,8 @@ app.use((req, res, next) => {
     res.locals.error = req.flash("error");
     next();
 });
+
+app.use("/reservations", reservationRoutes);
 
 // Routes
 app.use("/", require("./routes/auth"));

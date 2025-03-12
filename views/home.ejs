@@ -94,26 +94,23 @@
     
 
     <div class="bookmenu-form-container">
-
-        <div id="close-bookmenu-btn" class="fas fa-times"></div>
-
-        <form action="">
-            <h3>quick reservation (no food pre-order)</h3>
+        <form action="/reservations/add" method="POST">
+            <h3>Quick Reservation (No Food Pre-Order)</h3>
             
-            <span>number of guests</span>
-            <input type="text" name="guest" class="box" placeholder="enter the number of guests" id="guest">
+            <span>Customer Name</span>
+            <input type="text" name="customerName" class="box" placeholder="Enter your name" required>
             
-            <span>reservation date</span>
-            <input type="date" name="date" class="box" id="date">
- 
-            <span>note</span>
-            <textarea name="note" id="note" rows="4" cols="40" class="box">leave a note</textarea>
-
-            <input type="submit" value="submit" class="btn">
-
+            <span>Number of Guests</span>
+            <input type="number" name="numOfGuests" class="box" placeholder="Enter the number of guests" required>
+            
+            <span>Reservation Date</span>
+            <input type="date" name="reservationDate" class="box" required>
+    
+            <input type="submit" value="Submit" class="btn">
         </form>
-
     </div>
+    
+    
 
     <!-- quick reserve feature end -->
 
