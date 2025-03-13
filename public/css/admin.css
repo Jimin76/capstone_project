@@ -1,0 +1,128 @@
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+
+#main {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 20px; 
+    max-width: 1200px;
+    padding: 20px;
+    justify-content: center; 
+}
+
+
+.card {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 280px;
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card h3, .card p {
+    margin: 16px 0;
+}
+
+.card p {
+    color: #919191;
+    margin-top: 20px;
+}
+
+.button-container {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+/* 버튼 스타일 */
+button {
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+
+button[type="submit"] {
+    background-color: #4caf50;
+    color: white;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+
+button.decline-button {
+    background-color: #f44336;
+    color: white;
+}
+
+button.decline-button:hover:not(:disabled) {
+    background-color: #e53935;
+}
+
+
+button:disabled {
+    background-color: #ddd;
+    color: #888;
+    cursor: not-allowed;
+}
+
+
+.status {
+    display: flex;
+    align-items: center; 
+    justify-content: center; 
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 5px;
+    height: 20px; 
+    background-color: #f0f0f0;
+    color: #333;
+    margin: 10px 0;
+}
+
+
+.status-confirmed {
+    color: green;
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+}
+
+.status-canceled {
+    color: red;
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+}
+
+.status-pending {
+    color: orange;
+    background-color: #fff3e0;
+    border: 1px solid #ffe0b2;
+}

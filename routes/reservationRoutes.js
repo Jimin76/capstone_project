@@ -3,6 +3,34 @@ const express = require("express");
 const router = express.Router();
 const Reservation = require("../models/Reservation");
 
+
+router.post("/add", async (req, res) => {
+  try {
+      // 🛠️ req.body의 데이터를 출력하여 문제 확인
+      console.log("📝 Received data:", req.body);
+
+      const { customerName, reservationDate, numOfGuests } = req.body;
+
+      // 새로운 예약 생성
+      const newReservation = new Reservation({
+          customerName,
+          reservationDate,
+          numOfGuests,
+          status: "Pending"
+      });
+
+      await newReservation.save();
+      console.log("✅ Reservation saved:", newReservation);
+      
+      res.redirect("/");
+  } catch (err) {
+      console.error("❌ Failed to save reservation:", err);
+      res.status(500).send("Server Error");
+  }
+});
+
+
+
 // GET /reservations (with optional search)
 router.get("/", async (req, res) => {
   try {

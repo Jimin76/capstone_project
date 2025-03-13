@@ -1,6 +1,7 @@
 const express = require("express");
 const passport = require("passport");
 const User = require("../models/user");
+const reservation = require("../models/Reservation");
 const router = express.Router();
 
 // Render login page
@@ -11,6 +12,54 @@ router.get("/", (req, res) => {
 router.get("/home", (req, res) => {
     res.render("home");
 });
+
+router.get("/admin", async (req, res) => {
+    try {
+        const rows = await reservation.find({});
+
+        const formattedRows = rows.map(row => ({
+            _id: row._id.toString(),
+            customerName: row.customerName,
+            reservationDate: row.reservationDate.toISOString().split('T')[0],
+            numOfGuests: row.numOfGuests,
+            status: row.status
+        }));
+
+        res.render("admin", { rows: formattedRows });
+    } catch (err) {
+        console.error("❌ Failed to load reservations:", err);
+        res.render("admin", { rows: [] });
+    }
+});
+
+
+router.post("/update-status", async (req, res) => {
+    const { id, status } = req.body;
+
+    console.log("📝 Received update request:", { id, status });
+
+    if (!id || !status) {
+        console.error("❌ Invalid ID or status");
+        return res.redirect("/admin");
+    }
+
+    try {
+        const updateResult = await reservation.findByIdAndUpdate(id, { status }, { new: true });
+        console.log("✅ Update result from MongoDB:", updateResult);
+
+        if (!updateResult) {
+            console.error("❌ No document found with this ID:", id);
+        }
+
+        res.redirect("/admin");
+    } catch (err) {
+        console.error("❌ Failed to update reservation status:", err);
+        res.redirect("/admin");
+    }
+});
+
+
+module.exports = router;
 
 // Register user
 router.post("/register", async (req, res) => {
