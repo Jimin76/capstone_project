@@ -1,22 +1,35 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const chatContainer = document.getElementById("chat-container");
-    const userInput = document.getElementById("user-input");
+    const chatbotButton = document.getElementById("chatbot-button");
+    const chatbox = document.getElementById("chatbox");
+    const closeChat = document.getElementById("close-chat");
+    const chatContent = document.getElementById("chat-content");
+    const chatInput = document.getElementById("chat-input");
     const sendBtn = document.getElementById("send-btn");
+
+    // ✅ 챗봇 버튼 클릭 시 채팅창 열기
+    chatbotButton.addEventListener("click", function () {
+        chatbox.style.display = "flex";
+    });
+
+    // ✅ 닫기 버튼 클릭 시 채팅창 숨기기
+    closeChat.addEventListener("click", function () {
+        chatbox.style.display = "none";
+    });
 
     function appendMessage(role, message) {
         const messageElement = document.createElement("div");
         messageElement.classList.add("message", role === "user" ? "user-message" : "bot-message");
         messageElement.innerHTML = `<strong>${role === "user" ? "You" : "Bot"}:</strong> ${message}`;
-        chatContainer.appendChild(messageElement);
-        chatContainer.scrollTop = chatContainer.scrollHeight; // 자동 스크롤
+        chatContent.appendChild(messageElement);
+        chatContent.scrollTop = chatContent.scrollHeight; // 자동 스크롤
     }
 
     async function sendMessage() {
-        const message = userInput.value.trim();
+        const message = chatInput.value.trim();
         if (!message) return;
 
         appendMessage("user", message);
-        userInput.value = "";
+        chatInput.value = "";
 
         try {
             const response = await fetch("/chatbot", {
@@ -34,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     sendBtn.addEventListener("click", sendMessage);
 
-    userInput.addEventListener("keypress", function (event) {
+    chatInput.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             sendMessage();
         }

@@ -249,17 +249,26 @@
 
 
     </div>
+    <!-- 챗봇 버튼 -->
     <button id="chatbot-button">💬</button>
+
+    <!-- 챗봇 박스 -->
     <div id="chatbox">
         <div id="chat-header">
-            <p id="chat-words">AI Helper</p>
+            Restaurant Chatbot
             <button id="close-chat">✖</button>
         </div>
         <div id="chat-content">
-            <p id="chat-words">Welcome customer! How can I help?</p>
+            <div class="bot-message message"><strong>Bot:</strong> Hello! How can I assist you?</div>
         </div>
-        <input type="text" id="chat-input" placeholder="Type a message...">
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Ask something..." autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
     </div>
+
+    <!-- ✅ 외부 JS 파일 추가 -->
+    <script src="/js/chatbot.js"></script>
 
     <!-- deal section ends -->
 
