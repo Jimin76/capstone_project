@@ -159,3 +159,11 @@ document.querySelector('#bookmenu-btn').onclick = () =>{
 document.querySelector('#close-bookmenu-btn').onclick = () =>{
   bookmenuForm.classList.remove('active');
 }
+
+document.getElementById("chatbot-button").addEventListener("click", function () {
+  document.getElementById("chatbox").style.display = "flex";
+});
+
+document.getElementById("close-chat").addEventListener("click", function () {
+  document.getElementById("chatbox").style.display = "none";
+});
