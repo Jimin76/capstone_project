@@ -1276,6 +1276,7 @@ margin-top: 1rem;
             border-radius: 10px;
             display: none;
             flex-direction: column;
+            z-index : 10;
         }
 
         /* 채팅 헤더 */
