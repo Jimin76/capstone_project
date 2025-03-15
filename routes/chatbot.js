@@ -4,8 +4,8 @@ require("dotenv").config();
 
 const router = express.Router();
 
-const WEBHOOK_URL = "http://localhost:3000/webhook"; // ✅ Webhook URL
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // ✅ GPT API Key 가져오기
+const WEBHOOK_URL = "http://localhost:3000/webhook"; // ebhook URL
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY; //  get GPT API Key 
 
 async function analyzeUserInput(userMessage) {
     try {
@@ -14,7 +14,7 @@ async function analyzeUserInput(userMessage) {
             {
                 model: "gpt-3.5-turbo",
                 messages: [
-                    { role: "system", content: "You are a restaurant chatbot. Your task is to return the correct intent name from the list: [greeting, opening_hours, location, menu, contact]. Respond with only the intent name." },
+                    { role: "system", content: "You are a restaurant chatbot. Your task is to return the correct intent name from the list: [greeting, opening_hours, location, menu, contact, recommend_menu]. Respond with only the intent name." },
                     { role: "user", content: userMessage }
                 ],
                 temperature: 0.3
@@ -30,26 +30,25 @@ async function analyzeUserInput(userMessage) {
         const intent = response.data.choices[0].message.content.trim();
         console.log("Identified Intent:", intent);
 
-        return intent; // ✅ Intent만 반환하도록 수정
+        return intent; // Intent
     } catch (error) {
         console.error("Error calling GPT API:", error);
-        return "general_question"; // 오류 발생 시 기본 intent 반환
+        return "general_question"; 
     }
 }
 
-
-// 사용자의 입력을 분석하고 Dialogflow에서 데이터 찾기
+// analysis user input and find data on Dialogflow
 router.post("/", async (req, res) => {
     const userMessage = req.body.message;
 
     try {
-        // Step 1: GPT를 이용하여 질문 분석
+        // Step 1: analyse input with GPT
         const intent = await analyzeUserInput(userMessage);
         console.log(`Identified Intent: ${intent}`);
 
-        // Step 2: Dialogflow Webhook에 요청하여 관련 데이터 가져오기
+        // Step 2: request to Dialogflow Webhook and get related data
         const dialogflowResponse = await axios.post(WEBHOOK_URL, {
-            queryResult: { intent: { displayName: intent } }
+            queryResult: { intent: { displayName: intent }, userMessage: userMessage }
         });
 
         const botReply = dialogflowResponse.data.fulfillmentText || "Sorry, I didn't understand that.";
