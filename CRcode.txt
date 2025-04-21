@@ -1,0 +1,54 @@
+let
+    // Load source data
+    Source = Excel.Workbook(File.Contents("C:\Users\ADMIN\Downloads\Reporte Febrero 2025-Rawdata.xlsx"), null, true),
+    RawData = Source{[Item="Data",Kind="Sheet"]}[Data],
+    PromotedHeaders = Table.PromoteHeaders(RawData, [PromoteAllScalars=true]),
+
+    // Step 2: Sort by HAWB ascending
+    SortedRows = Table.Sort(PromotedHeaders, {{"HAWB / Bill of Lading #", Order.Ascending}}),
+
+    // Step 3a: Add Carrier
+    AddCarrier = Table.AddColumn(SortedRows, "Carrier", each [Freight Supplier], type text),
+
+    // Step 3b: Add Total HAWB# fixed to 1
+    AddTotalHAWB = Table.AddColumn(AddCarrier, "Total HAWB#", each 1, Int64.Type),
+
+    // Step 3c: Add Unique HAWB# by detecting max File Item No per File Name
+    AddIndex = Table.AddIndexColumn(AddTotalHAWB, "Index", 0, 1, Int64.Type),
+
+    Grouped = Table.Group(AddIndex, {"File Name"}, {
+        {"AllData", each _, type table [File Item No=nullable number, Index=number]}
+    }),
+
+    AddMaxItemIndex = Table.AddColumn(Grouped, "MaxItemIndex", each 
+        let
+            allRows = [AllData],
+            maxItemNo = List.Max(allRows[File Item No]),
+            matchingRows = Table.SelectRows(allRows, each [File Item No] = maxItemNo),
+            maxRow = Table.First(matchingRows)
+        in
+            maxRow[Index]
+    ),
+
+    Expanded = Table.ExpandTableColumn(AddMaxItemIndex, "AllData", 
+        List.RemoveItems(Table.ColumnNames(AddIndex), {"File Name"})),
+
+    AddUniqueHAWB = Table.AddColumn(Expanded, "Unique HAWB#", each if [Index] = [MaxItemIndex] then 1 else 0, Int64.Type),
+    RemoveHelperCols = Table.RemoveColumns(AddUniqueHAWB, {"Index", "MaxItemIndex"}),
+
+    // Step 3d-e-f: Add empty columns
+    AddRemarks = Table.AddColumn(RemoveHelperCols, "Remarks", each null, type text),
+    AddInPBI = Table.AddColumn(AddRemarks, "In PBI", each null, type text),
+    AddPBICount = Table.AddColumn(AddInPBI, "PBI_Count", each null, Int64.Type),
+
+    // Step 3g: Reorder columns to place new ones after HAWB
+    OriginalCols = Table.ColumnNames(PromotedHeaders),
+    NewCols = {"Carrier", "Total HAWB#", "Unique HAWB#", "Remarks", "In PBI", "PBI_Count"},
+    Pos = List.PositionOf(OriginalCols, "HAWB / Bill of Lading #"),
+    Before = List.FirstN(OriginalCols, Pos + 1),
+    After = List.Skip(OriginalCols, Pos + 1),
+    NewOrder = Before & NewCols & After,
+    FinalReordered = Table.ReorderColumns(AddPBICount, NewOrder)
+
+in
+    FinalReordered
