@@ -13,13 +13,11 @@ let
     // Step 3b: Add Total HAWB# fixed to 1
     AddTotalHAWB = Table.AddColumn(AddCarrier, "Total HAWB#", each 1, Int64.Type),
 
-    // Step 3c: Add Unique HAWB# by detecting max File Item No per File Name
+    // Step 3c: Add Unique HAWB# based on max File Item No in each File Name
     AddIndex = Table.AddIndexColumn(AddTotalHAWB, "Index", 0, 1, Int64.Type),
-
     Grouped = Table.Group(AddIndex, {"File Name"}, {
         {"AllData", each _, type table [File Item No=nullable number, Index=number]}
     }),
-
     AddMaxItemIndex = Table.AddColumn(Grouped, "MaxItemIndex", each 
         let
             allRows = [AllData],
@@ -29,19 +27,27 @@ let
         in
             maxRow[Index]
     ),
-
     Expanded = Table.ExpandTableColumn(AddMaxItemIndex, "AllData", 
         List.RemoveItems(Table.ColumnNames(AddIndex), {"File Name"})),
 
     AddUniqueHAWB = Table.AddColumn(Expanded, "Unique HAWB#", each if [Index] = [MaxItemIndex] then 1 else 0, Int64.Type),
     RemoveHelperCols = Table.RemoveColumns(AddUniqueHAWB, {"Index", "MaxItemIndex"}),
 
-    // Step 3d-e-f: Add empty columns
+    // Step 3d: Add Remarks column
     AddRemarks = Table.AddColumn(RemoveHelperCols, "Remarks", each null, type text),
-    AddInPBI = Table.AddColumn(AddRemarks, "In PBI", each null, type text),
-    AddPBICount = Table.AddColumn(AddInPBI, "PBI_Count", each null, Int64.Type),
 
-    // Step 3g: Reorder columns to place new ones after HAWB
+    // Step 4: Load PBI query & prepare
+    PBI_Source = PBI,
+    PBI_Renamed = Table.RenameColumns(PBI_Source, {{"#HAWB", "HAWB_PBI"}, {"LSP/ Carrier", "Carrier_PBI"}}),
+
+    // Step 5a: Merge HAWB with PBI
+    Merged = Table.NestedJoin(AddRemarks, {"HAWB / Bill of Lading #"}, PBI_Renamed, {"HAWB_PBI"}, "PBI_Match", JoinKind.LeftOuter),
+    ExpandedPBI = Table.ExpandTableColumn(Merged, "PBI_Match", {"Carrier_PBI"}, {"In PBI"}),
+
+    // ✅ Step 5b: Compute PBI_Count based on In PBI (if null then 0 else 1)
+    AddPBICount = Table.AddColumn(ExpandedPBI, "PBI_Count", each if [In PBI] = null then 0 else 1, Int64.Type),
+
+    // Step 3g: Reorder columns (after HAWB)
     OriginalCols = Table.ColumnNames(PromotedHeaders),
     NewCols = {"Carrier", "Total HAWB#", "Unique HAWB#", "Remarks", "In PBI", "PBI_Count"},
     Pos = List.PositionOf(OriginalCols, "HAWB / Bill of Lading #"),
