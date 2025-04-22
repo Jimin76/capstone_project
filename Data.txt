@@ -69,36 +69,44 @@ let
     MergeWD = Table.NestedJoin(CleanedHAWB, {"HAWB / Bill of Lading #"}, CleanedWD, {"HAWB_WD"}, "WD_Match", JoinKind.LeftOuter),
     AddWDFlag = Table.AddColumn(MergeWD, "WD_Flag", each if List.Count([WD_Match]) > 0 then "WD" else null, type text),
     ReplaceRemarksWD = Table.TransformColumns(AddWDFlag, {{"Remarks", each if _ = null then null else _, type text}}),
-    CombineRemarksWD = Table.AddColumn(ReplaceRemarksWD, "Remarks_Updated", each if [Remarks] = null then [WD_Flag] else [Remarks], type text),
+    CombineRemarksWD = Table.AddColumn(ReplaceRemarksWD, "Remarks_Updated", each 
+    let
+        r = try Text.Upper(Text.Trim(Text.From([Remarks]))) otherwise "",
+        wd = [WD_Flag]
+    in
+        if (r = null or r = "") and wd <> null then wd else r,
+    type text),
     RemoveWDCols = Table.RemoveColumns(CombineRemarksWD, {"WD_Match", "WD_Flag", "Remarks"}),
     RenameWDRemarks = Table.RenameColumns(RemoveWDCols, {{"Remarks_Updated", "Remarks"}}),
 
     // Step 7: Internal Trucking
     AddInternalTrucking = Table.AddColumn(RenameWDRemarks, "Remarks_IT", each 
-        let
-            safeRemark = try Text.Upper(Text.Trim(Text.From([Remarks]))) otherwise "",
-            safeVendor = try Text.Upper(Text.Trim(Text.From([Freight Supplier]))) otherwise ""
-        in
-            if safeRemark = "" and safeVendor = "VENDOR" then "Internal Trucking" else safeRemark,
-        type text),
+    let
+        safeRemark = try Text.Upper(Text.Trim(Text.From([Remarks]))) otherwise "",
+        safeVendor = try Text.Upper(Text.Trim(Text.From([Freight Supplier]))) otherwise ""
+    in
+        if safeRemark = "" and safeVendor = "VENDOR" then "Internal Trucking"
+        else safeRemark,
+    type text),
+
 
     // Step 8: Supplier Paid
     AddSupplierPaid = Table.AddColumn(AddInternalTrucking, "Remarks_Final", each 
-        let
-            rawRemark = try [Remarks_IT] otherwise null,
-            safeRemark = if rawRemark is text then Text.Upper(Text.Trim(rawRemark)) else "",
-            rawInco = try [Inco Term] otherwise null,
-            safeInco = if rawInco is text then Text.Upper(Text.Trim(rawInco)) else "",
-            rawSupp = try [Supplier Name] otherwise null,
-            safeSupp = if rawSupp is text then Text.Upper(Text.Trim(rawSupp)) else ""
-        in
-if safeRemark = "" 
-    and (safeInco <> "EXW" and not Text.StartsWith(safeInco, "F"))
-    and (not Text.Contains(safeSupp, "INTEL"))
-then "Supplier Paid"
-else safeRemark,
+    let
+        rawRemark = try [Remarks_IT] otherwise null,
+        safeRemark = if rawRemark is text then Text.Upper(Text.Trim(rawRemark)) else "",
+        rawInco = try [Inco Term] otherwise null,
+        safeInco = if rawInco is text then Text.Upper(Text.Trim(rawInco)) else "",
+        rawSupp = try [Supplier Name] otherwise null,
+        safeSupp = if rawSupp is text then Text.Upper(Text.Trim(rawSupp)) else ""
+    in
+        if (safeRemark = "")
+            and (safeInco <> "EXW" and not Text.StartsWith(safeInco, "F"))
+            and (not Text.Contains(safeSupp, "INTEL"))
+        then "Supplier Paid"
+        else safeRemark,
+    type text),
 
-        type text),
 
     // Finalize Remarks column
     CleanRemarks = Table.RemoveColumns(AddSupplierPaid, {"Remarks", "Remarks_IT"}),
@@ -118,7 +126,8 @@ else safeRemark,
 
     // ✅ 전체 결과 출력
     Result = CleanResult,
-    #"정렬된 행 수" = Table.Sort(Result,{{"File Name", Order.Ascending}})
+    #"정렬된 행 수" = Table.Sort(Result,{{"File Name", Order.Ascending}}),
+    #"필터링된 행" = Table.SelectRows(#"정렬된 행 수", each true)
 
 in
-    #"정렬된 행 수"
+    #"필터링된 행"
