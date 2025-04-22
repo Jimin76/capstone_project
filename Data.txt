@@ -92,11 +92,12 @@ let
             rawSupp = try [Supplier Name] otherwise null,
             safeSupp = if rawSupp is text then Text.Upper(Text.Trim(rawSupp)) else ""
         in
-            if (safeRemark = "" or safeRemark = "INTERNAL TRUCKING")
-                and (safeInco <> "EXW" and not Text.StartsWith(safeInco, "F"))
-                and (not Text.Contains(safeSupp, "INTEL"))
-            then "Supplier Paid"
-            else safeRemark,
+if safeRemark = "" 
+    and (safeInco <> "EXW" and not Text.StartsWith(safeInco, "F"))
+    and (not Text.Contains(safeSupp, "INTEL"))
+then "Supplier Paid"
+else safeRemark,
+
         type text),
 
     // Finalize Remarks column
