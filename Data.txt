@@ -50,20 +50,46 @@ let
     // Step 5b: Add PBI_Count
     AddPBICount = Table.AddColumn(ExpandedPBI, "PBI_Count", each if [In PBI] = null then 0 else 1, Int64.Type),
 
-    // Step 6: Merge with WD_PBI and mark Remarks as "WD"
+    // Step 6: Clean HAWB fields before merge (Confused - Skipped)
+    CleanedHAWB = Table.TransformColumns(AddPBICount, {{"HAWB / Bill of Lading #", each Text.Trim(Text.From(_)), type text}}),
     WD_Renamed = Table.RenameColumns(WD_Fix, {{"HAWB Number", "HAWB_WD"}}),
-    MergeWD = Table.NestedJoin(AddPBICount, {"HAWB / Bill of Lading #"}, WD_Renamed, {"HAWB_WD"}, "WD_Match", JoinKind.LeftOuter),
-    AddWDFlag = Table.AddColumn(MergeWD, "Remarks_WD", each if List.Count([WD_Match]) > 0 and [Remarks] = null then "WD" else [Remarks]),
-    RemovedWD = Table.RemoveColumns(AddWDFlag, {"WD_Match", "Remarks"}),
-    RenamedWD = Table.RenameColumns(RemovedWD, {{"Remarks_WD", "Remarks"}}),
+    CleanedWD = Table.TransformColumns(WD_Renamed, {{"HAWB_WD", each Text.Trim(Text.From(_)), type text}}),
 
-    // Step 7: Vendor → Internal Trucking if Remarks is still null
-    AddFinalRemarks = Table.AddColumn(RenamedWD, "Final Remarks", each 
-        if [Remarks] = null and Text.Upper([Freight Supplier]) = "VENDOR" then "Internal Trucking" 
-        else [Remarks]
+    MergeWD = Table.NestedJoin(CleanedHAWB, {"HAWB / Bill of Lading #"}, CleanedWD, {"HAWB_WD"}, "WD_Match", JoinKind.LeftOuter),
+    UpdateRemarksWD = Table.TransformColumns(
+        Table.AddColumn(MergeWD, "WD_Flag", each List.Count([WD_Match]) > 0),
+        {"WD_Flag", each if _ then "WD" else null, type text}
     ),
+    MergeRemarks = Table.AddColumn(UpdateRemarksWD, "Updated Remarks", each if [Remarks] = null then [WD_Flag] else [Remarks], type text),
+    DropHelpers = Table.RemoveColumns(MergeRemarks, {"WD_Flag", "WD_Match", "Remarks"}),
+    RenameFinalRemarks = Table.RenameColumns(DropHelpers, {{"Updated Remarks", "Remarks"}}),
+
+    // Step 7: Apply "Internal Trucking" if Remarks is still null and Freight Supplier is VENDOR
+    AddFinalRemarks = Table.AddColumn(RenameFinalRemarks, "Final Remarks", each 
+        let
+            currentRemark = try [Remarks] otherwise null,
+            freight = try Text.Upper([Freight Supplier]) otherwise null
+        in
+            if currentRemark = null and freight = "VENDOR" then "Internal Trucking" else currentRemark,
+        type text),
     DropOldRemarks = Table.RemoveColumns(AddFinalRemarks, {"Remarks"}),
     RenameFinal = Table.RenameColumns(DropOldRemarks, {{"Final Remarks", "Remarks"}}),
+
+    // ✅ Step 8: Apply "Supplier Paid" logic
+    AddStep8Remarks = Table.AddColumn(RenameFinal, "Final Remarks Step8", each 
+        let
+            currentRemark = try [Remarks] otherwise null,
+            incoterm = try Text.Upper(Text.Trim([Incoterm])) otherwise "",
+            supplier = try Text.Upper(Text.Trim([Supplier Name])) otherwise ""
+        in
+            if (currentRemark = null or currentRemark = "") 
+                and (incoterm <> "EXW" and not Text.StartsWith(incoterm, "F"))
+                and (not Text.Contains(supplier, "INTEL"))
+            then "Supplier Paid" 
+            else currentRemark,
+        type text),
+    DropStep7Remarks = Table.RemoveColumns(AddStep8Remarks, {"Remarks"}),
+    RenameStep8Remarks = Table.RenameColumns(DropStep7Remarks, {{"Final Remarks Step8", "Remarks"}}),
 
     // Step 3g: Reorder columns (after HAWB)
     OriginalCols = Table.ColumnNames(PromotedHeaders),
@@ -72,7 +98,8 @@ let
     Before = List.FirstN(OriginalCols, Pos + 1),
     After = List.Skip(OriginalCols, Pos + 1),
     NewOrder = Before & NewCols & After,
-    FinalReordered = Table.ReorderColumns(RenameFinal, NewOrder)
+    FinalReordered = Table.ReorderColumns(RenameStep8Remarks, NewOrder),
+    #"필터링된 행" = Table.SelectRows(FinalReordered, each ([Remarks] = "Supplier Paid"))
 
 in
-    FinalReordered
+    #"필터링된 행"

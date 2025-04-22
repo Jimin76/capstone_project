@@ -1,0 +1,7 @@
+let
+    원본 = Excel.Workbook(File.Contents("C:\Users\ADMIN\Downloads\Febrero 2025-CR-A2A-Working file .xlsx"), null, true),
+    #"WD PBI_Sheet" = 원본{[Item="WD PBI",Kind="Sheet"]}[Data],
+    #"승격된 헤더" = Table.PromoteHeaders(#"WD PBI_Sheet", [PromoteAllScalars=true]),
+    #"변경된 유형" = Table.TransformColumnTypes(#"승격된 헤더",{{"Freight Carrier ", type text}, {"Shipment Method ", type text}, {"HAWB Number", type text},{"Shipment Status", type text}, {"SHIP_UNIT_GID", type text}, {"DN Number", Int64.Type}, {"Lot Number ", type text}, {"BOL Number ", type text}, {"SM Number ", Int64.Type}, {"Date Shipped PGI  ", type datetime}, {"INSERT_DATE", type datetime}, {"Estimated Delivery Date Time ", type datetime}, {"SLA", Int64.Type}, {"Shipper Name ", type text}, {"Ship To Name ", type text}, {"Ship From Country Code ", type text}, {"Ship From Factory Code ", type text}, {"Origin Port Code ", type text}, {"Ship To Country Code ", type text}, {"Ship To Factory Code ", type text}, {"Destination Port Code ", type text}, {"Route", type text}, {"Route Code ", type text}, {"Product Code Name ", type text}, {"Delivered Quantity ", Int64.Type}, {"Package Type", type text}, {"Carrier Weight ", type number}, {"RDD_Y1", type datetime}, {"RDD_Y2", type datetime}, {"Final_RDD", type date}, {"POD", type datetime}, {"OTD", type text}, {"Intel", type any}, {"Adjusted?", type any}, {"REASON TITLE", type any}, {"Exception Description", type any}, {"OTM REASON CODE", type any}, {"REMARK", type any}})
+in
+    #"변경된 유형"
