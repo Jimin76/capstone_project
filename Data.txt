@@ -4,15 +4,20 @@ let
     WD_Fix = WD_PBI,
 
     // Load source data
-    Source = Excel.Workbook(File.Contents("C:\Users\ADMIN\Downloads\Reporte Febrero 2025-Rawdata.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents("C:\\Users\\ADMIN\\Downloads\\Reporte Febrero 2025-Rawdata.xlsx"), null, true),
     RawData = Source{[Item="Data",Kind="Sheet"]}[Data],
     PromotedHeaders = Table.PromoteHeaders(RawData, [PromoteAllScalars=true]),
 
     // Step 2: Sort by HAWB ascending
     SortedRows = Table.Sort(PromotedHeaders, {{"HAWB / Bill of Lading #", Order.Ascending}}),
 
-    // Step 3a: Add Carrier
-    AddCarrier = Table.AddColumn(SortedRows, "Carrier", each [Freight Supplier], type text),
+    // ✅ Step 3a: Add Carrier by VLOOKUP-style join from PBI
+    PBI_Carrier = Table.SelectColumns(PBI_Fix, {"#HAWB", "LSP/ Carrier"}),
+    RenamedPBI = Table.RenameColumns(PBI_Carrier, {{"#HAWB", "HAWB_PBI"}, {"LSP/ Carrier", "Carrier_Lookup"}}),
+    CleanedPBILookup = Table.TransformColumns(RenamedPBI, {{"HAWB_PBI", each Text.Trim(Text.From(_)), type text}}),
+    CleanedHAWBKey = Table.TransformColumns(SortedRows, {{"HAWB / Bill of Lading #", each Text.Trim(Text.From(_)), type text}}),
+    MergedCarrier = Table.NestedJoin(CleanedHAWBKey, {"HAWB / Bill of Lading #"}, CleanedPBILookup, {"HAWB_PBI"}, "Carrier_Match", JoinKind.LeftOuter),
+    AddCarrier = Table.ExpandTableColumn(MergedCarrier, "Carrier_Match", {"Carrier_Lookup"}, {"Carrier"}),
 
     // Step 3b: Add Total HAWB# fixed to 1
     AddTotalHAWB = Table.AddColumn(AddCarrier, "Total HAWB#", each 1, Int64.Type),
@@ -77,7 +82,7 @@ let
             if safeRemark = "" and safeVendor = "VENDOR" then "Internal Trucking" else safeRemark,
         type text),
 
-    // ✅ Step 8: Supplier Paid with strict type checking
+    // Step 8: Supplier Paid
     AddSupplierPaid = Table.AddColumn(AddInternalTrucking, "Remarks_Final", each 
         let
             rawRemark = try [Remarks_IT] otherwise null,
@@ -107,11 +112,12 @@ let
     NewOrder = Before & NewCols & After,
     FinalReordered = Table.ReorderColumns(FinalRemarksRenamed, NewOrder),
 
-    // ✅ 마지막 빈 행 제거 (선택적 안전망)
+    // ✅ 마지막 빈 행 제거
     CleanResult = Table.SelectRows(FinalReordered, each List.NonNullCount(Record.FieldValues(_)) > 0),
 
     // ✅ 전체 결과 출력
-    Result = CleanResult
+    Result = CleanResult,
+    #"정렬된 행 수" = Table.Sort(Result,{{"File Name", Order.Ascending}})
 
 in
-    Result
+    #"정렬된 행 수"
