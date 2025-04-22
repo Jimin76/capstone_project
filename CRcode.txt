@@ -1,4 +1,8 @@
 let
+    // ✅ 외부 쿼리 안전하게 캐싱 (Firewall 우회)
+    PBI_Fix = PBI,
+    WD_Fix = WD_PBI,
+
     // Load source data
     Source = Excel.Workbook(File.Contents("C:\Users\ADMIN\Downloads\Reporte Febrero 2025-Rawdata.xlsx"), null, true),
     RawData = Source{[Item="Data",Kind="Sheet"]}[Data],
@@ -33,19 +37,33 @@ let
     AddUniqueHAWB = Table.AddColumn(Expanded, "Unique HAWB#", each if [Index] = [MaxItemIndex] then 1 else 0, Int64.Type),
     RemoveHelperCols = Table.RemoveColumns(AddUniqueHAWB, {"Index", "MaxItemIndex"}),
 
-    // Step 3d: Add Remarks column
+    // Step 3d: Add empty Remarks column
     AddRemarks = Table.AddColumn(RemoveHelperCols, "Remarks", each null, type text),
 
-    // Step 4: Load PBI query & prepare
-    PBI_Source = PBI,
-    PBI_Renamed = Table.RenameColumns(PBI_Source, {{"#HAWB", "HAWB_PBI"}, {"LSP/ Carrier", "Carrier_PBI"}}),
+    // Step 4: Prepare PBI table
+    PBI_Renamed = Table.RenameColumns(PBI_Fix, {{"#HAWB", "HAWB_PBI"}, {"LSP/ Carrier", "Carrier_PBI"}}),
 
     // Step 5a: Merge HAWB with PBI
     Merged = Table.NestedJoin(AddRemarks, {"HAWB / Bill of Lading #"}, PBI_Renamed, {"HAWB_PBI"}, "PBI_Match", JoinKind.LeftOuter),
     ExpandedPBI = Table.ExpandTableColumn(Merged, "PBI_Match", {"Carrier_PBI"}, {"In PBI"}),
 
-    // ✅ Step 5b: Compute PBI_Count based on In PBI (if null then 0 else 1)
+    // Step 5b: Add PBI_Count
     AddPBICount = Table.AddColumn(ExpandedPBI, "PBI_Count", each if [In PBI] = null then 0 else 1, Int64.Type),
+
+    // Step 6: Merge with WD_PBI and mark Remarks as "WD"
+    WD_Renamed = Table.RenameColumns(WD_Fix, {{"HAWB Number", "HAWB_WD"}}),
+    MergeWD = Table.NestedJoin(AddPBICount, {"HAWB / Bill of Lading #"}, WD_Renamed, {"HAWB_WD"}, "WD_Match", JoinKind.LeftOuter),
+    AddWDFlag = Table.AddColumn(MergeWD, "Remarks_WD", each if List.Count([WD_Match]) > 0 and [Remarks] = null then "WD" else [Remarks]),
+    RemovedWD = Table.RemoveColumns(AddWDFlag, {"WD_Match", "Remarks"}),
+    RenamedWD = Table.RenameColumns(RemovedWD, {{"Remarks_WD", "Remarks"}}),
+
+    // Step 7: Vendor → Internal Trucking if Remarks is still null
+    AddFinalRemarks = Table.AddColumn(RenamedWD, "Final Remarks", each 
+        if [Remarks] = null and Text.Upper([Freight Supplier]) = "VENDOR" then "Internal Trucking" 
+        else [Remarks]
+    ),
+    DropOldRemarks = Table.RemoveColumns(AddFinalRemarks, {"Remarks"}),
+    RenameFinal = Table.RenameColumns(DropOldRemarks, {{"Final Remarks", "Remarks"}}),
 
     // Step 3g: Reorder columns (after HAWB)
     OriginalCols = Table.ColumnNames(PromotedHeaders),
@@ -54,7 +72,7 @@ let
     Before = List.FirstN(OriginalCols, Pos + 1),
     After = List.Skip(OriginalCols, Pos + 1),
     NewOrder = Before & NewCols & After,
-    FinalReordered = Table.ReorderColumns(AddPBICount, NewOrder)
+    FinalReordered = Table.ReorderColumns(RenameFinal, NewOrder)
 
 in
     FinalReordered
